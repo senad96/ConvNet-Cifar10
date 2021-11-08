@@ -52,9 +52,9 @@ print(hidden_size)
 data_aug_transforms = []
 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-data_aug_transforms.append(transforms.RandomRotation(degrees=100))
-data_aug_transforms.append(transforms.RandomHorizontalFlip())
-data_aug_transforms.append(transforms.RandomVerticalFlip())
+#data_aug_transforms.append(transforms.RandomRotation(degrees=100))
+#data_aug_transforms.append(transforms.RandomHorizontalFlip())
+#data_aug_transforms.append(transforms.RandomVerticalFlip())
 
 
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -115,13 +115,40 @@ class ConvNet(nn.Module):
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         
-        self.conv1 = nn.Conv2d(3,128,kernel_size=3, padding=1, stride=1)
-        self.conv2 = nn.Conv2d(128,512,kernel_size=3, padding=1, stride=1)
-        self.maxpool2d = nn.MaxPool2d(kernel_size=2, stride = 2)
-        self.conv3 = nn.Conv2d(512,512,kernel_size=3, padding=1, stride=1)
-        self.conv4 = nn.Conv2d(512,512,kernel_size=3, padding=1, stride=1)
-        self.conv5 = nn.Conv2d(512,512,kernel_size=3, padding=1, stride=1)
-        self.fc1 = nn.Linear(512, 10)
+        # 2 scenario, based on the fact wheather we gotta use the batch-norm
+
+        if norm_layer == 'BN':
+
+            self.norm_layer = 'BN'
+            self.maxpool2d = nn.MaxPool2d(kernel_size=2, stride = 2)
+            
+            self.conv1 = nn.Conv2d(3,128,kernel_size=3, padding=1, stride=1)
+            self.bn1 = nn.BatchNorm2d(128)
+
+            self.conv2 = nn.Conv2d(128,512,kernel_size=3, padding=1, stride=1)
+            self.bn2 = nn.BatchNorm2d(512)
+
+            self.conv3 = nn.Conv2d(512,512,kernel_size=3, padding=1, stride=1)
+            self.bn3 = nn.BatchNorm2d(512)
+
+            self.conv4 = nn.Conv2d(512,512,kernel_size=3, padding=1, stride=1)
+            self.bn4 = nn.BatchNorm2d(512)
+
+            self.conv5 = nn.Conv2d(512,512,kernel_size=3, padding=1, stride=1)
+            self.bn5 = nn.BatchNorm2d(512)
+
+            self.fc1 = nn.Linear(512, 10)
+        
+        elif norm_layer == None:
+
+            self.norm_layer = None
+            self.conv1 = nn.Conv2d(3,128,kernel_size=3, padding=1, stride=1)
+            self.conv2 = nn.Conv2d(128,512,kernel_size=3, padding=1, stride=1)
+            self.maxpool2d = nn.MaxPool2d(kernel_size=2, stride = 2)
+            self.conv3 = nn.Conv2d(512,512,kernel_size=3, padding=1, stride=1)
+            self.conv4 = nn.Conv2d(512,512,kernel_size=3, padding=1, stride=1)
+            self.conv5 = nn.Conv2d(512,512,kernel_size=3, padding=1, stride=1)
+            self.fc1 = nn.Linear(512, 10)
 
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -132,24 +159,48 @@ class ConvNet(nn.Module):
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         
-        x = self.maxpool2d(self.conv1(x))
-        x = nn.functional.relu(x)
-        
-        x = self.maxpool2d(self.conv2(x))
-        x = nn.functional.relu(x)
-        
-        x = self.maxpool2d(self.conv3(x))
-        x = nn.functional.relu(x)
-        
-        x = self.maxpool2d(self.conv4(x))
-        x = nn.functional.relu(x)
-        
-        x = self.maxpool2d(self.conv5(x))
-        x = nn.functional.relu(x)
+       #2 cases : wheather we have to use the batch-noramlization or not.
 
-        x = x.view(x.size()[0], -1)
-        x = self.fc1(x)
+        if self.norm_layer == 'BN':
+            x = self.maxpool2d(self.bn1((self.conv1(x))))
+            x = nn.functional.relu(x)
+            #print("ciao")
+            
+            x = self.maxpool2d(self.bn2((self.conv2(x))))
+            x = nn.functional.relu(x)
+            
+            x = self.maxpool2d(self.bn3((self.conv3(x))))
+            x = nn.functional.relu(x)
+            
+            x = self.maxpool2d(self.bn4((self.conv4(x))))
+            x = nn.functional.relu(x)
+            
+            x = self.maxpool2d(self.bn5((self.conv5(x))))
+            x = nn.functional.relu(x)
+
+            x = x.view(x.size()[0], -1)
+            x = self.fc1(x)
         
+        else:
+
+            x = self.maxpool2d(self.conv1(x))
+            x = nn.functional.relu(x)
+            
+            x = self.maxpool2d(self.conv2(x))
+            x = nn.functional.relu(x)
+            
+            x = self.maxpool2d(self.conv3(x))
+            x = nn.functional.relu(x)
+            
+            x = self.maxpool2d(self.conv4(x))
+            x = nn.functional.relu(x)
+            
+            x = self.maxpool2d(self.conv5(x))
+            x = nn.functional.relu(x)
+
+            x = x.view(x.size()[0], -1)
+            x = self.fc1(x)
+            
         out = x
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return out
@@ -170,7 +221,9 @@ def PrintModelSize(model, disp=True):
     
     
     model_sz = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print(model_sz)
+    
+    if disp == True:
+        print(model_sz)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return model_sz
@@ -295,7 +348,14 @@ for epoch in range(num_epochs):
         #################################################################################
 
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        
+        if len(accuracy_val)==1:
+            best_accuracy = 0
+        
+        # Save then best model.
+        if accuracy > best_accuracy:
+            best_model = model
+            best_accuracy = accuracy
         
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -327,7 +387,9 @@ plt.show()
 #################################################################################
 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-
+model = best_model
+model.to(device)
+model.eval()
 
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
