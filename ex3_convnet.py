@@ -52,6 +52,9 @@ print(hidden_size)
 data_aug_transforms = []
 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
+data_aug_transforms.append(transforms.RandomRotation(degrees=100))
+data_aug_transforms.append(transforms.RandomHorizontalFlip())
+data_aug_transforms.append(transforms.RandomVerticalFlip())
 
 
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -111,7 +114,14 @@ class ConvNet(nn.Module):
         #################################################################################
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        
+        self.conv1 = nn.Conv2d(3,128,kernel_size=3, padding=1, stride=1)
+        self.conv2 = nn.Conv2d(128,512,kernel_size=3, padding=1, stride=1)
+        self.maxpool2d = nn.MaxPool2d(kernel_size=2, stride = 2)
+        self.conv3 = nn.Conv2d(512,512,kernel_size=3, padding=1, stride=1)
+        self.conv4 = nn.Conv2d(512,512,kernel_size=3, padding=1, stride=1)
+        self.conv5 = nn.Conv2d(512,512,kernel_size=3, padding=1, stride=1)
+        self.fc1 = nn.Linear(512, 10)
 
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -121,9 +131,26 @@ class ConvNet(nn.Module):
         # TODO: Implement the forward pass computations                                 #
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        
+        x = self.maxpool2d(self.conv1(x))
+        x = nn.functional.relu(x)
+        
+        x = self.maxpool2d(self.conv2(x))
+        x = nn.functional.relu(x)
+        
+        x = self.maxpool2d(self.conv3(x))
+        x = nn.functional.relu(x)
+        
+        x = self.maxpool2d(self.conv4(x))
+        x = nn.functional.relu(x)
+        
+        x = self.maxpool2d(self.conv5(x))
+        x = nn.functional.relu(x)
 
-
-
+        x = x.view(x.size()[0], -1)
+        x = self.fc1(x)
+        
+        out = x
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return out
 
@@ -140,8 +167,10 @@ def PrintModelSize(model, disp=True):
     # training                                                                      #
     #################################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
+    
+    
+    model_sz = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(model_sz)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return model_sz
