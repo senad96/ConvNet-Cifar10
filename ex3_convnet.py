@@ -357,8 +357,9 @@ for epoch in range(num_epochs):
         
         # Save then best model.
         if accuracy > best_accuracy:
-            best_model = model
+            best_model.load_state_dict(model.state_dict())
             best_accuracy = accuracy
+            print("saving model")
         
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
