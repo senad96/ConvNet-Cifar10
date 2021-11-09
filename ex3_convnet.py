@@ -241,7 +241,7 @@ def VisualizeFilter(model):
     # You can use matlplotlib.imshow to visualize an image in python                #
     #################################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    filters = model.conv1.weight.data
+    filters = model.conv1.weight.data.cpu()
     grid_img = torchvision.utils.make_grid(filters, nrow=16, normalize = True)
     # since matplotlib requires the images to be (height, width, channel)
     plt.imshow(grid_img.permute(1,2,0))
