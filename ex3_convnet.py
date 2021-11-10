@@ -39,7 +39,7 @@ num_training= 49000
 num_validation =1000
 norm_layer = None #norm_layer = 'BN'
 print(hidden_size)
-
+p = 0.1 # p = 0.5 p = 0.9
 
 
 #-------------------------------------------------
@@ -121,6 +121,7 @@ class ConvNet(nn.Module):
 
             self.norm_layer = 'BN'
             self.maxpool2d = nn.MaxPool2d(kernel_size=2, stride = 2)
+            self.dropout = nn.Dropout(p)
             
             self.conv1 = nn.Conv2d(3,128,kernel_size=3, padding=1, stride=1)
             self.bn1 = nn.BatchNorm2d(128)
@@ -164,19 +165,24 @@ class ConvNet(nn.Module):
         if self.norm_layer == 'BN':
             x = self.maxpool2d(self.bn1((self.conv1(x))))
             x = nn.functional.relu(x)
+            x = self.dropout(x)
             #print("ciao")
             
             x = self.maxpool2d(self.bn2((self.conv2(x))))
             x = nn.functional.relu(x)
+            x = self.dropout(x)
             
             x = self.maxpool2d(self.bn3((self.conv3(x))))
             x = nn.functional.relu(x)
+            x = self.dropout(x)
             
             x = self.maxpool2d(self.bn4((self.conv4(x))))
             x = nn.functional.relu(x)
+            x = self.dropout(x)
             
             x = self.maxpool2d(self.bn5((self.conv5(x))))
             x = nn.functional.relu(x)
+            x = self.dropout(x)
 
             x = x.view(x.size()[0], -1)
             x = self.fc1(x)
