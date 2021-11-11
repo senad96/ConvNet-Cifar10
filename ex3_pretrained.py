@@ -98,7 +98,17 @@ class VggModel(nn.Module):
         # disable training the feature extraction layers based on the fine_tune flag.   #
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+   
+        vgg = models.vgg11_bn(pretrained=True)
+        if fine_tune: set_parameter_requires_grad(vgg, True)
+        
+        layers = ([l for l in vgg.features] + 
+                  [nn.Conv2d(512,256,kernel_size=3, padding=1, stride=1) ] +
+                  [nn.BatchNorm2d(256)] + 
+                  [nn.ReLU(inplace=True)] )
+        
+        self.classifier = nn.Sequential(*layers)
+        self.fc1 = nn.Linear(256, 10)
         
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -109,7 +119,10 @@ class VggModel(nn.Module):
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        
+        x = self.classifier(x)
+        x = x.view(x.size()[0], -1)
+        x = self.fc1(x)
+        out = x
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return out
@@ -131,7 +144,10 @@ print("Params to learn:")
 if fine_tune:
     params_to_update = []
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    
+    for name,param in model.named_parameters():
+        if param.requires_grad == True:
+            print("\t",name)
+            params_to_update.append(param)
     
     
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -219,7 +235,15 @@ for epoch in range(num_epochs):
         #################################################################################
 
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        
+        if len(accuracy_val)==1:
+            best_accuracy = 0
+        
+        # Save then best model.
+        if accuracy > best_accuracy:
+            best_model.load_state_dict(model.state_dict())
+            best_accuracy = accuracy
+            print("saving model")
 
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -250,6 +274,9 @@ plt.show()
 #################################################################################
 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
+model = best_model
+model.to(device)
+model.eval()
 
 
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
