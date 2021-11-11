@@ -102,13 +102,11 @@ class VggModel(nn.Module):
         vgg = models.vgg11_bn(pretrained=True)
         if fine_tune: set_parameter_requires_grad(vgg, True)
         
-        layers = ([l for l in vgg.features] + 
-                  [nn.Conv2d(512,256,kernel_size=3, padding=1, stride=1) ] +
-                  [nn.BatchNorm2d(256)] + 
-                  [nn.ReLU(inplace=True)] )
-        
+        layers = [l for l in vgg.features] 
         self.classifier = nn.Sequential(*layers)
-        self.fc1 = nn.Linear(256, 10)
+        self.fc1 = nn.Linear(512, 256)
+        self.bn1 = nn.BatchNorm1d(num_features=256)        
+        self.fc2 = nn.Linear(256, 10)
         
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -121,7 +119,9 @@ class VggModel(nn.Module):
 
         x = self.classifier(x)
         x = x.view(x.size()[0], -1)
-        x = self.fc1(x)
+        x = nn.functional.relu(self.bn1(self.fc1(x)))
+        x = self.fc2(x)
+
         out = x
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
