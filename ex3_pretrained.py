@@ -99,7 +99,7 @@ class VggModel(nn.Module):
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
    
-        vgg = models.vgg11_bn(pretrained=True)
+        vgg = models.vgg11_bn(pretrained)
         if fine_tune: set_parameter_requires_grad(vgg, True)
         
         layers = [l for l in vgg.features] 
